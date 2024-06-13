@@ -1,0 +1,14 @@
+name: example
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.2.0
+
+dependencies:
+  most_schema_parser: 
+    path: ../
+
+dev_dependencies:
+  lints: ^2.1.0
+  test: ^1.24.0
