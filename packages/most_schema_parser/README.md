@@ -1,4 +1,8 @@
-<h1> most_schema_parser </h1>
+<h1> MOST Schema Parser </h1>
+
+<p align="center">
+  <img src="images/logo.png" width="64" height="64" alt="most_key_value_editor screenshot">
+</p>
 
 <p align="center">
   <a href="https://pub.dev/packages/most_schema_parser">

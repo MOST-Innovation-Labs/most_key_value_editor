@@ -1,4 +1,8 @@
-<h1> most_key_value_editor </h1>
+<h1> MOST Key-Value Editor </h1>
+
+<p align="center">
+  <img src="images/logo.png" width="64" height="64" alt="most_key_value_editor screenshot">
+</p>
 
 <p align="center">
   <a href="https://pub.dev/packages/most_key_value_editor">
@@ -6,11 +10,11 @@
   </a>
 </p>
 
-<p align="center">
-  <img src="assets/screenshot.png" alt="most_key_value_editor screenshot">
-</p>
-
 Create highly customizable forms from [JSON Schema](https://json-schema.org/) files.
+
+<p align="center">
+  <img src="images/screenshot.png" alt="most_key_value_editor screenshot">
+</p>
 
 - [Features](#features)
 - [Usage](#usage)
