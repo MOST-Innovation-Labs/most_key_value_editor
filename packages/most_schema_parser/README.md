@@ -1,7 +1,7 @@
 <h1> MOST Schema Parser </h1>
 
 <p align="center">
-  <img src="images/logo.png" width="64" height="64" alt="most_key_value_editor screenshot">
+  <img src="images/logo.png" width="64" height="64" alt="most logo">
 </p>
 
 <p align="center">
