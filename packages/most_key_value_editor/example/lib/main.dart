@@ -98,6 +98,16 @@ class _EditorPageState extends State<EditorPage> {
       parser: const MostJsonSchemaParser(
         customMappers: customMappers,
       ),
+      validatorProvider: (c) {
+        return MostMultiValidator([
+          MostKeyValueEditorController.defaultValidator(c),
+          MostCallbackValidator((map) {
+            return map["firstName"] == "John" && map["lastName"] == "Doe"
+                ? [const ValidationMessage.error("Please use real name")]
+                : [];
+          })
+        ]);
+      },
     );
 
     controller

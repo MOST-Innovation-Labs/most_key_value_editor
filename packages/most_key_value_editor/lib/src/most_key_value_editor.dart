@@ -161,6 +161,8 @@ class _MostKeyValueEditorState extends State<MostKeyValueEditor> {
                 builder: (BuildContext context, SearchController controller) {
                   return SearchBar(
                     controller: controller,
+                    // TODO replace deprecated usage after migrated from 3.16.9
+                    // ignore: deprecated_member_use
                     padding: const MaterialStatePropertyAll<EdgeInsets>(
                       EdgeInsets.symmetric(horizontal: 16.0),
                     ),
