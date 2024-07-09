@@ -1,5 +1,5 @@
 name: most_key_value_editor
-description: Highly customizable JSON editor based on `most_schema_parser`.
+description: Highly customizable JSON editor based on `package:most_schema_parser`.
 version: 0.0.2
 repository: https://github.com/MOST-Innovation-Labs/most_key_value_editor
 
