@@ -3,7 +3,6 @@ import 'package:most_schema_parser/most_schema_parser.dart';
 
 import '../json_reader_writer.dart';
 import '../utils/most_property_ext.dart';
-import '../validator/validation_result.dart';
 
 /// Property name widget.
 class PropertyNameView extends StatelessWidget {

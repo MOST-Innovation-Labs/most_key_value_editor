@@ -1,3 +1,9 @@
+## 0.0.2
+- Add `MostValidator` concept:
+  - Allows to add custom validators to the key-value editor.
+  - Validation works as before with 0 changes.
+  - For the usage please refer to `example/`
+
 ## 0.0.1
 
 - Initial release.

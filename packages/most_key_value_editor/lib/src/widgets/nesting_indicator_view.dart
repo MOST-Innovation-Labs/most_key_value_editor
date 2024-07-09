@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:most_schema_parser/most_schema_parser.dart';
 
 import '../utils/color_ext.dart';
-import '../validator/validation_result.dart';
 
 /// Nesting indicator widget.
 class NestingIndicatorView extends StatelessWidget {
