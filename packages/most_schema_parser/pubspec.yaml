@@ -1,6 +1,6 @@
 name: most_schema_parser
 description: Highly customizable JSON Schema object model mapper and validator.
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/MOST-Innovation-Labs/most_key_value_editor
 
 environment:
