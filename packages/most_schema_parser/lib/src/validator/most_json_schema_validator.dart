@@ -18,23 +18,21 @@ class MostJsonSchemaValidator implements MostValidator {
     }
 
     final validationResult = jsonSchema.validate(map);
-    if (!validationResult.isValid) return [];
-
     final messages = <ValidationMessage>[];
-    if (!validationResult.isValid) {
-      for (final error in [
-        ...validationResult.errors,
-        ...validationResult.warnings
-      ]) {
-        final path = _normalizeSchemaPath(error.instancePath) ?? '';
-        messages.add(
-          ValidationMessage.propertyError(
-            path: path,
-            message: error.message,
-          ),
-        );
-      }
+
+    for (final error in [
+      ...validationResult.errors,
+      ...validationResult.warnings
+    ]) {
+      final path = _normalizeSchemaPath(error.instancePath) ?? '';
+      messages.add(
+        ValidationMessage.propertyError(
+          path: path,
+          message: error.message,
+        ),
+      );
     }
+
     return messages;
   }
 

@@ -1,3 +1,6 @@
+## 0.0.3
+- Fix `MostJsonSchemaValidator` not validating.
+
 ## 0.0.2
 - Add `MostValidator` concept.
 
