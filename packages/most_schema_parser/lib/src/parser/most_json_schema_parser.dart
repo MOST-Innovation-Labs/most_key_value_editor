@@ -10,6 +10,7 @@ import 'property_spec.dart';
 class MostJsonSchemaParser implements MostJsonSchemaPropertyParser {
   /// List of default mappers.
   static const List<PropertyMapper> defaultMappers = [
+    EnumPropertyMapper(),
     BooleanPropertyMapper(),
     StringPropertyMapper(),
     NumberPropertyMapper(),
@@ -17,14 +18,12 @@ class MostJsonSchemaParser implements MostJsonSchemaPropertyParser {
     ObjectPropertyMapper(),
   ];
 
-  /// List of custom mappers.
-  ///
-  /// [customMappers] are checked _before_ [defaultMappers].
-  final List<PropertyMapper> customMappers;
+  /// List of mappers.
+  final List<PropertyMapper> mappers;
 
   /// Creates [MostJsonSchemaParser].
   const MostJsonSchemaParser({
-    this.customMappers = const [],
+    this.mappers = defaultMappers,
   });
 
   /// Parse JSON Schema.
@@ -61,12 +60,7 @@ class MostJsonSchemaParser implements MostJsonSchemaPropertyParser {
       parent: parent,
     );
 
-    for (final mapper in customMappers) {
-      final mostProperty = mapper.mapOrNull(this, propertySpec);
-      if (mostProperty != null) return mostProperty;
-    }
-
-    for (final mapper in defaultMappers) {
+    for (final mapper in mappers) {
       final mostProperty = mapper.mapOrNull(this, propertySpec);
       if (mostProperty != null) return mostProperty;
     }

@@ -1,3 +1,36 @@
+## 1.0.0
+- BREAKING CHANGE: `MostJsonSchemaParser` is not applying default mappers by default. 
+```dart
+// BEFORE
+MostJsonSchemaParser(
+  customMappers: [
+    MyMapper(),
+  ],
+);
+
+// AFTER
+MostJsonSchemaParser(
+  customMappers: [
+    MyMapper(),
+    ...MostJsonSchemaParser.defaultMappers,
+  ],
+);
+// OR
+MostJsonSchemaParser(
+  customMappers: [
+    MyMapper(),
+    EnumPropertyMapper(),
+    BooleanPropertyMapper(),
+    StringPropertyMapper(),
+    NumberPropertyMapper(),
+    ArrayPropertyMapper(),
+    ObjectPropertyMapper(),,
+  ],
+);
+```
+- BREAKING CHANGE: `MostProperty` is now sealed. Consider implementing `MostValueProperty` or `MostObjectProperty`.
+- BREAKING CHANGE: Validator-related classes are removed from the package.
+
 ## 0.0.3
 - Fix `MostJsonSchemaValidator` not validating.
 

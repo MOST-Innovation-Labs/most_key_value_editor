@@ -22,10 +22,10 @@ class PropertySpec {
   /// `propertyName` property from the parent JSON Schema.
   final String propertyName;
 
-  /// `title` property.
+  /// Whether the property is required on its parent.
   final bool required;
 
-  /// Whether the property is required on its parent.
+  /// Parent property.
   final MostProperty? parent;
 
   /// Creates a [PropertySpec].

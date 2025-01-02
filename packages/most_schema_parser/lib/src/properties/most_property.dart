@@ -2,7 +2,7 @@ part 'most_object_property.dart';
 part 'most_value_property.dart';
 
 /// Object model JSON Schema property representation.
-abstract interface class MostProperty {
+sealed class MostProperty {
   /// Title.
   /// Mapped from `title`.
   final String? title;
