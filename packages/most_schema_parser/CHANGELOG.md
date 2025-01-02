@@ -24,12 +24,13 @@ MostJsonSchemaParser(
     StringPropertyMapper(),
     NumberPropertyMapper(),
     ArrayPropertyMapper(),
-    ObjectPropertyMapper(),,
+    ObjectPropertyMapper(),
   ],
 );
 ```
 - BREAKING CHANGE: `MostProperty` is now sealed. Consider implementing `MostValueProperty` or `MostObjectProperty`.
 - BREAKING CHANGE: Validator-related classes are removed from the package.
+- BREAKING CHANGE: Add missing `EnumPropertyMapper` to [MostJsonSchemaParser.defaultMappers].
 
 ## 0.0.3
 - Fix `MostJsonSchemaValidator` not validating.
