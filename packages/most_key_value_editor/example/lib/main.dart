@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
 import 'package:json_schema/json_schema.dart';
 import 'package:most_key_value_editor/most_key_value_editor.dart';
-import 'package:most_schema_parser/most_schema_parser.dart';
 
 import 'ip_property.dart';
 
@@ -27,31 +26,50 @@ class ExampleApp extends StatelessWidget {
       ),
       home: const EditorPage(
         initialJson: {
-          "lastName": "Doe",
-          "age": 42,
+          "person": {
+            "last_name": "Doe",
+            "gender": "alien",
+            "age": 42,
+          },
           "ipv4": "0.0.0.256",
         },
         initialJsonSchema: {
           "title": "Person",
           "required": [
-            "firstName",
-            "age",
+            "person",
+            "admin",
+            "ipv4",
           ],
           "properties": {
-            "firstName": {
-              "type": "string",
-              "description": "The person's first name."
+            "person": {
+              "type": "object",
+              "required": [
+                "first_name",
+                "last_name",
+                "nicknames",
+                "gender",
+                "age",
+              ],
+              "properties": {
+                "first_name": {"type": "string"},
+                "last_name": {"type": "string"},
+                "nicknames": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                },
+                "gender": {
+                  "type": "string",
+                  "enum": ["male", "female", "prefer not to say"]
+                },
+                "age": {
+                  "description":
+                      "Age in years which must be equal to or greater than zero.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+              },
             },
-            "lastName": {
-              "type": "string",
-              "description": "The person's last name."
-            },
-            "age": {
-              "description":
-                  "Age in years which must be equal to or greater than zero.",
-              "type": "integer",
-              "minimum": 0
-            },
+            "admin": {"type": "boolean"},
             "ipv4": {
               "title": "IP",
               "type": "string",
@@ -75,44 +93,33 @@ class EditorPage extends StatefulWidget {
     required this.initialJsonSchema,
   });
 
+  JsonSchema get jsonSchema => JsonSchema.create(initialJsonSchema);
+
   @override
   State<EditorPage> createState() => _EditorPageState();
 }
 
 class _EditorPageState extends State<EditorPage> {
-  static const customMappers = <PropertyMapper>[
-    IpV4PropertyMapper(),
-  ];
-  static const customBuilder = PropertyBuilder(
-    inputBuilders: [
-      ipv4PropertyInputBuilder,
-    ],
-  );
-
   late final MostKeyValueEditorController controller;
 
   @override
   void initState() {
     super.initState();
     controller = MostKeyValueEditorController(
-      parser: const MostJsonSchemaParser(
-        customMappers: customMappers,
+      initialState: EditorState.fromAccessor(JsonAccessor()),
+      onChangedTransformer: ValidateCommand(
+        const EditorStateValidator.merge([
+          PropertiesValidator(),
+          UnspecifiedPropertiesValidator(),
+          JsonSchemaValidator(),
+          MockNameValidator(),
+        ]),
       ),
-      validatorProvider: (c) {
-        return MostMultiValidator([
-          MostKeyValueEditorController.defaultValidator(c),
-          MostCallbackValidator((map) {
-            return map["firstName"] == "John" && map["lastName"] == "Doe"
-                ? [const ValidationMessage.error("Please use real name")]
-                : [];
-          })
-        ]);
-      },
     );
 
     controller
-      ..seedJson(widget.initialJson)
-      ..seedJsonSchema(JsonSchema.create(widget.initialJsonSchema));
+      ..executeCommand(SeedJsonCommand(widget.initialJson))
+      ..executeCommand(SeedJsonSchemaCommand(widget.jsonSchema));
   }
 
   @override
@@ -122,7 +129,7 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   void _copyToClipboard(MostKeyValueEditorController controller) {
-    final map = controller.jsonRw.read();
+    final map = controller.jsonAccessor.read();
     Clipboard.setData(ClipboardData(text: json.encode(map)));
   }
 
@@ -132,21 +139,6 @@ class _EditorPageState extends State<EditorPage> {
       appBar: AppBar(
         title: const Text('Editor Demo'),
         actions: [
-          ListenableBuilder(
-            listenable: controller,
-            builder: (context, _) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton.icon(
-                  onPressed: controller.jsonRw.canUndo
-                      ? () => controller.jsonRw.undo()
-                      : null,
-                  label: const Text('Undo'),
-                  icon: const Icon(Icons.undo_rounded),
-                ),
-              );
-            },
-          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton.icon(
@@ -155,30 +147,41 @@ class _EditorPageState extends State<EditorPage> {
               icon: const Icon(Icons.copy),
             ),
           ),
-          ListenableBuilder(
-            listenable: controller,
-            builder: (context, _) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton.icon(
-                  onPressed: () => controller.validate(),
-                  label: const Text('Validate'),
-                  icon: ValidationStateView(
-                    validationResult: controller.validationResult,
-                  ),
-                ),
-              );
-            },
-          ),
         ],
       ),
-      body: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: MostKeyValueEditor(
-          controller: controller,
-          customBuilder: customBuilder,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: MostKeyValueEditor(
+            controller: controller,
+            inputBuilders: const [
+              customInputBuilder,
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+class MockNameValidator extends EditorStateValidator {
+  const MockNameValidator();
+
+  @override
+  List<ValidationMessage> validate(EditorState state) {
+    final firstName = state.jsonAccessor.getValue('person.first_name');
+    final lastName = state.jsonAccessor.getValue('person.last_name');
+    return firstName == "John" && lastName == "Doe"
+        ? [
+            const ValidationMessage.propertyError(
+              path: "person.first_name",
+              message: "Please use real name",
+            ),
+            const ValidationMessage.propertyError(
+              path: "person.last_name",
+              message: "Please use real name",
+            ),
+          ]
+        : [];
   }
 }

@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../../json_reader_writer.dart';
+import '../../json_accessor.dart';
 import '../../utils/property_builder.dart';
 import '../value_property_view.dart';
 
+/// Input for [ArrayMostProperty].
 class ArrayPropertyInput extends StatelessWidget {
-  final ArrayMostProperty property;
-  final JsonPropertyReaderWriter propertyRw;
-  final PropertyBuilder propertyBuilder;
+  final ArrayMostProperty _property;
+  final JsonPropertyAccessor _accessor;
+  final PropertyBuilder _propertyBuilder;
 
+  /// Create [ArrayPropertyInput].
   const ArrayPropertyInput({
     super.key,
-    required this.property,
-    required this.propertyRw,
-    required this.propertyBuilder,
-  });
+    required ArrayMostProperty property,
+    required JsonPropertyAccessor accessor,
+    required PropertyBuilder propertyBuilder,
+  })  : _propertyBuilder = propertyBuilder,
+        _accessor = accessor,
+        _property = property;
 
   void _onChanged(List newValue) {
-    propertyRw.value = newValue.isEmpty ? null : newValue.toSet().toList();
+    _accessor.value = newValue.isEmpty ? null : newValue.toSet().toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final value = propertyRw.value;
+    final value = _accessor.value;
     final items = List.of(value is List ? value : []);
 
     return Column(
@@ -51,23 +55,25 @@ class ArrayPropertyInput extends StatelessWidget {
                       child: Builder(
                         builder: (context) {
                           // TODO refactor to make more efficient
-                          final itemPath = property.itemProperty.fullPath;
-                          JsonReaderWriter? itemRw;
-                          itemRw = JsonReaderWriter(
-                            onChanged: (json) {
-                              final value = itemRw?.property(itemPath).value;
+                          final itemPath = _property.itemProperty.fullPath;
+                          JsonAccessor? itemAccessor;
+                          itemAccessor = ListeningProxyJsonAccessor(
+                            JsonAccessor(),
+                            onChanged: (path) {
+                              final value =
+                                  itemAccessor?.property(itemPath).value;
                               if (items[index] == value) return;
 
                               items[index] = value;
                               _onChanged(items);
                             },
                           );
-                          itemRw.property(itemPath).value = items[index];
+                          itemAccessor.property(itemPath).value = items[index];
 
                           return ValuePropertyView(
-                            property: property.itemProperty,
-                            jsonRw: itemRw,
-                            propertyBuilder: propertyBuilder,
+                            property: _property.itemProperty,
+                            jsonAccessor: itemAccessor,
+                            propertyBuilder: _propertyBuilder,
                           );
                         },
                       ),
@@ -92,7 +98,7 @@ class ArrayPropertyInput extends StatelessWidget {
           icon: const Icon(Icons.add),
           onPressed: () {
             items.add(null);
-            propertyRw.value = items;
+            _accessor.value = items;
           },
         ),
         const SizedBox(height: 40),

@@ -1,22 +1,48 @@
 import 'package:flutter/cupertino.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../json_reader_writer.dart';
+import '../controller/validator/models/validation_result.dart';
+import '../json_accessor.dart';
 import '../utils/property_builder.dart';
 import 'nesting_indicator_view.dart';
 import 'property_name_view.dart';
 
+/// Builder for a specific [EditorViewType].
+typedef EditorViewTypeBuilder = Widget Function(
+  EditorViewType editorViewType,
+  JsonAccessor jsonAccessor,
+  PropertyBuilder propertyBuilder,
+  ValidationResult validationResult,
+);
+
+/// Default builder for a specific [EditorViewType].
+Widget defaultEditorViewTypeBuilder(
+  EditorViewType editorViewType,
+  JsonAccessor jsonAccessor,
+  PropertyBuilder propertyBuilder,
+  ValidationResult validationResult,
+) =>
+    editorViewType.build(jsonAccessor, propertyBuilder, validationResult);
+
 /// Editor view type
 sealed class EditorViewType {
+  /// Property.
   MostProperty get property;
+
+  /// If it is a top-level property.
+  ///
+  /// Used in UI only.
   bool get topLevel;
 
+  /// Default view type build method.
   Widget build(
-    JsonReaderWriter jsonRw,
+    JsonAccessor jsonAccessor,
     PropertyBuilder propertyBuilder,
+    ValidationResult validationResult,
   );
 }
 
+/// Value View Type.
 class ValuePropertyEditorViewType implements EditorViewType {
   @override
   final bool topLevel;
@@ -24,6 +50,7 @@ class ValuePropertyEditorViewType implements EditorViewType {
   @override
   final MostValueProperty property;
 
+  /// Create [ValuePropertyEditorViewType].
   const ValuePropertyEditorViewType({
     required this.property,
     this.topLevel = false,
@@ -31,22 +58,25 @@ class ValuePropertyEditorViewType implements EditorViewType {
 
   @override
   Widget build(
-    JsonReaderWriter jsonRw,
+    JsonAccessor jsonAccessor,
     PropertyBuilder propertyBuilder,
+    ValidationResult validationResult,
   ) {
-    final property = this.property;
-    final propertyRw = jsonRw.property(property.fullPath);
-    final validationErrors = propertyRw.validationResult;
+    final accessor = jsonAccessor.property(property.fullPath);
+    final propertyValidationResult = validationResult.forProperty(
+      property.fullPath,
+    );
 
     final spec = PropertyBuilderSpec(
       property: property,
-      jsonRw: jsonRw,
-      propertyRw: propertyRw,
+      jsonAccessor: jsonAccessor,
+      accessor: accessor,
     );
 
     final child = Builder(
       builder: (context) =>
-          propertyBuilder.buildTitledView(context, spec) ??
+          propertyBuilder.buildTitledView(
+              context, spec, propertyValidationResult) ??
           propertyBuilder.buildUnsupportedView(context, spec),
     );
 
@@ -54,13 +84,14 @@ class ValuePropertyEditorViewType implements EditorViewType {
       padding: topLevel ? const EdgeInsets.only(top: 16) : EdgeInsets.zero,
       child: NestingIndicatorView(
         level: property.level,
-        validationResult: validationErrors,
+        validationResult: propertyValidationResult,
         child: child,
       ),
     );
   }
 }
 
+/// Object View Type.
 class ObjectPropertyEditorViewType implements EditorViewType {
   @override
   final bool topLevel;
@@ -68,6 +99,7 @@ class ObjectPropertyEditorViewType implements EditorViewType {
   @override
   final MostObjectProperty property;
 
+  /// Create [ObjectPropertyEditorViewType].
   const ObjectPropertyEditorViewType({
     required this.property,
     this.topLevel = false,
@@ -75,12 +107,14 @@ class ObjectPropertyEditorViewType implements EditorViewType {
 
   @override
   Widget build(
-    JsonReaderWriter jsonRw,
+    JsonAccessor jsonAccessor,
     PropertyBuilder propertyBuilder,
+    ValidationResult validationResult,
   ) {
-    final propertyRw = jsonRw.property(property.fullPath);
-    final validationErrors =
-        jsonRw.property(property.fullPath).validationResult;
+    final accessor = jsonAccessor.property(property.fullPath);
+    final propertyValidationResult = validationResult.forProperty(
+      property.fullPath,
+    );
 
     final child = Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -89,15 +123,15 @@ class ObjectPropertyEditorViewType implements EditorViewType {
           Expanded(
             child: PropertyNameView(
               property: property,
-              propertyRw: propertyRw,
-              validationResult: propertyRw.validationResult,
+              accessor: accessor,
+              validationResult: propertyValidationResult,
             ),
           ),
           if (!property.required) ...{
             CupertinoSwitch(
-              value: propertyRw.value != null,
+              value: accessor.value != null,
               onChanged: (isEnabled) {
-                propertyRw.value = isEnabled ? <String, dynamic>{} : null;
+                accessor.value = isEnabled ? <String, dynamic>{} : null;
               },
             ),
             const SizedBox(width: 16),
@@ -110,7 +144,7 @@ class ObjectPropertyEditorViewType implements EditorViewType {
       padding: topLevel ? const EdgeInsets.only(top: 16) : EdgeInsets.zero,
       child: NestingIndicatorView(
         level: property.level,
-        validationResult: validationErrors,
+        validationResult: propertyValidationResult,
         child: child,
       ),
     );

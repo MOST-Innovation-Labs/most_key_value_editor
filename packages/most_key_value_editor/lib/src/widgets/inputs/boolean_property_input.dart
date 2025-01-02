@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../../json_reader_writer.dart';
+import '../../json_accessor.dart';
 
+/// Tri-state boolean value.
 enum BoolValue {
+  /// Represents [true].
   yes,
+
+  /// Represents [false].
   no,
+
+  /// Represents [null].
   unknown;
 
+  /// Create from [bool].
   static BoolValue fromBool(bool? value) => switch (value) {
         true => BoolValue.yes,
         false => BoolValue.no,
         _ => BoolValue.unknown,
       };
 
+  /// Convert to nullable [bool].
   bool? toBoolOrNull() => switch (this) {
         BoolValue.yes => true,
         BoolValue.no => false,
@@ -21,35 +29,34 @@ enum BoolValue {
       };
 }
 
+/// Input for [BooleanMostProperty].
 class BooleanPropertyInput extends StatelessWidget {
-  final BooleanMostProperty property;
-  final JsonPropertyReaderWriter propertyRw;
+  final BooleanMostProperty _property;
+  final JsonPropertyAccessor _accessor;
 
+  /// Create [BooleanPropertyInput].
   const BooleanPropertyInput({
     super.key,
-    required this.property,
-    required this.propertyRw,
-  });
+    required BooleanMostProperty property,
+    required JsonPropertyAccessor accessor,
+  })  : _accessor = accessor,
+        _property = property;
 
   @override
   Widget build(BuildContext context) {
-    final dynamic value = propertyRw.value;
+    final dynamic value = _accessor.value;
 
-    return FormField<bool>(
-      builder: (context) {
-        final boolValue = BoolValue.fromBool(value);
+    final boolValue = BoolValue.fromBool(value);
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            _buildOption(BoolValue.yes, boolValue),
-            _buildOption(BoolValue.no, boolValue),
-            if (!property.required || (boolValue == BoolValue.unknown))
-              _buildOption(BoolValue.unknown, boolValue),
-          ],
-        );
-      },
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        _buildOption(BoolValue.yes, boolValue),
+        _buildOption(BoolValue.no, boolValue),
+        if (!_property.required || (boolValue == BoolValue.unknown))
+          _buildOption(BoolValue.unknown, boolValue),
+      ],
     );
   }
 
@@ -66,7 +73,7 @@ class BooleanPropertyInput extends StatelessWidget {
           groupValue: groupValue,
           onChanged: (BoolValue? newValue) {
             if (newValue == null) return;
-            propertyRw.value = value.toBoolOrNull();
+            _accessor.value = value.toBoolOrNull();
           },
         ),
         Text(switch (value) {

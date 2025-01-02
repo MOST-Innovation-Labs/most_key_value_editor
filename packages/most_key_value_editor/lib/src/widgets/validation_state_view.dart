@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:most_schema_parser/most_schema_parser.dart';
+import '../controller/validator/models/validation_result.dart';
 
 /// Validation state widget.
 class ValidationStateView extends StatelessWidget {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show Color;
 
+/// Color lightness extension.
 extension LightnessColorExtension on Color {
   /// Darken a color by [percent] amount (100 = black)
   Color darken([int percent = 10]) {
@@ -32,6 +33,7 @@ extension LightnessColorExtension on Color {
   }
 }
 
+/// Color serialization extension.
 extension HexColorExtension on Color {
   /// String is in the format "aabbcc" or "ffaabbcc"
   /// with an optional leading "#".
@@ -42,8 +44,7 @@ extension HexColorExtension on Color {
     return Color(int.parse(buffer.toString(), radix: 16));
   }
 
-  /// Prefixes a hash sign if [leadingHashSign] is set to `true`
-  /// (default is `true`).
+  /// Prefixes a hash sign if [leadingHashSign] is set to `true`.
   String toHex({bool leadingHashSign = true}) {
     return '${leadingHashSign ? '#' : ''}'
         '${alpha.toRadixString(16).padLeft(2, '0')}'

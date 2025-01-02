@@ -1,54 +1,35 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../../json_reader_writer.dart';
-import '../form_fields/string_form_field.dart';
+import '../../json_accessor.dart';
+import '../fields/string_field.dart';
 
+/// Input for [NumberMostProperty].
 class NumberPropertyInput extends StatelessWidget {
-  final NumberMostProperty property;
-  final JsonPropertyReaderWriter propertyRw;
+  // ignore: unused_field
+  final NumberMostProperty _property;
+  final JsonPropertyAccessor _accessor;
 
+  /// Create [NumberPropertyInput].
   const NumberPropertyInput({
     super.key,
-    required this.property,
-    required this.propertyRw,
-  });
+    required NumberMostProperty property,
+    required JsonPropertyAccessor accessor,
+  })  : _accessor = accessor,
+        _property = property;
 
   @override
   Widget build(BuildContext context) {
-    final dynamic value = propertyRw.value;
+    final dynamic value = _accessor.value;
 
-    return StringFormField(
+    return StringField(
       initial: value is num ? '$value' : null,
-      icon: const Icon(Icons.numbers),
+      icon: const Icon(CupertinoIcons.number_square),
       formatters: [FilteringTextInputFormatter.digitsOnly],
-      validate: (value) {
-        if (property.required && (value?.isEmpty ?? true)) {
-          return 'Missing required number.';
-        }
-        if (value == null) {
-          return null;
-        }
-
-        final number = num.tryParse(value);
-        if (property.required && number == null) {
-          return 'Missing required number.';
-        }
-        if (number == null) {
-          return null;
-        }
-
-        final minimum = property.minimum;
-        if (minimum != null && number < minimum) {
-          return 'Value must be greater or equal to $minimum';
-        }
-
-        return null;
-      },
       onChanged: (newValue) {
-        final number = num.tryParse(newValue);
-        propertyRw.value = number;
+        final number = num.tryParse(newValue ?? '');
+        _accessor.value = number;
       },
     );
   }

@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../../json_reader_writer.dart';
+import '../../json_accessor.dart';
 
+/// Input for [EnumMostProperty].
 class EnumPropertyInput extends StatelessWidget {
-  final EnumMostProperty property;
-  final JsonPropertyReaderWriter propertyRw;
+  final EnumMostProperty _property;
+  final JsonPropertyAccessor _accessor;
 
+  /// Create [EnumPropertyInput].
   const EnumPropertyInput({
     super.key,
-    required this.property,
-    required this.propertyRw,
-  });
+    required EnumMostProperty property,
+    required JsonPropertyAccessor accessor,
+  })  : _accessor = accessor,
+        _property = property;
 
   @override
   Widget build(BuildContext context) {
-    final dynamic value = propertyRw.value;
+    final dynamic value = _accessor.value;
 
-    return DropdownButtonFormField(
-      value: property.values.contains(value) ? value : null,
-      items: property.values
+    return DropdownButton<String>(
+      value: _property.values.contains(value) ? value : null,
+      isExpanded: true,
+      items: _property.values
           .map(
             (enumValue) => DropdownMenuItem(
               value: enumValue,
@@ -27,18 +31,11 @@ class EnumPropertyInput extends StatelessWidget {
             ),
           )
           .toList(),
-      validator: (value) {
-        if (value == null) {
-          return null;
-        }
-        if (!property.values.contains(value)) {
-          return 'Value is not supported';
-        }
-
-        return null;
-      },
       onChanged: (newValue) {
-        propertyRw.value = newValue;
+        if (newValue == null) return;
+        if (!_property.values.contains(newValue)) return;
+
+        _accessor.value = newValue;
       },
     );
   }

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'most_key_value_editor_controller.dart';
+import 'controller/most_key_value_editor_controller.dart';
+import 'controller/validator/models/validation_result.dart';
 import 'utils/most_property_ext.dart';
 import 'utils/property_builder.dart';
 import 'widgets/editor_view_type.dart';
@@ -19,34 +20,57 @@ import 'widgets/value_property_view.dart';
 
 /// Most Key-Value Editor.
 // TODO convert search to an option
-class MostKeyValueEditor extends StatefulWidget {
-  /// Controller.
-  final MostKeyValueEditorController controller;
+class MostKeyValueEditor<T extends EditorState> extends StatefulWidget {
+  /// Editor Controller.
+  final MostKeyValueEditorController<T> controller;
 
-  /// Custom Builder.
+  /// Builder for [EditorViewType].
+  final EditorViewTypeBuilder editorViewTypeBuilder;
+
+  /// Custom title builders.
   ///
-  /// Custom builder is checked before the default one.
-  final PropertyBuilder? customBuilder;
+  /// Checked before the default ones.
+  final List<PropertyTitleWidgetBuilder<Widget?, MostValueProperty>>
+      titleBuilders;
 
+  /// Custom input builders.
+  ///
+  /// Checked before the default ones.
+  final List<PropertyWidgetBuilder<Widget?, MostProperty>> inputBuilders;
+
+  /// Unsupported property type builder.
+  final PropertyWidgetBuilder<Widget?, MostProperty>? unsupportedBuilder;
+
+  /// Parser  for [EditorViewType].
   final EditorViewTypeParser editorViewTypeParser;
+
+  /// Delay after stop typing before the search.
   final Duration searchDebounceDuration;
+
+  /// Duration of the scroll to searched property.
   final Duration searchScrollDuration;
 
+  /// Create [MostKeyValueEditor].
   const MostKeyValueEditor({
     super.key,
     required this.controller,
-    this.customBuilder,
+    this.editorViewTypeBuilder = defaultEditorViewTypeBuilder,
+    this.titleBuilders = const [],
+    this.inputBuilders = const [],
+    this.unsupportedBuilder,
     this.editorViewTypeParser = const EditorViewTypeParser(),
     this.searchDebounceDuration = const Duration(milliseconds: 300),
     this.searchScrollDuration = const Duration(milliseconds: 300),
   });
 
   @override
-  State<MostKeyValueEditor> createState() => _MostKeyValueEditorState();
+  State<MostKeyValueEditor<T>> createState() => _MostKeyValueEditorState<T>();
 }
 
-class _MostKeyValueEditorState extends State<MostKeyValueEditor> {
+class _MostKeyValueEditorState<T extends EditorState>
+    extends State<MostKeyValueEditor<T>> {
   late final PropertyBuilder propertyBuilder;
+
   late ItemScrollController _itemScrollController;
   late SearchController _searchController;
 
@@ -58,17 +82,16 @@ class _MostKeyValueEditorState extends State<MostKeyValueEditor> {
   @override
   void initState() {
     super.initState();
-    final customBuilder = widget.customBuilder;
     propertyBuilder = PropertyBuilder(
       titleBuilders: [
-        if (customBuilder != null) ...customBuilder.titleBuilders,
+        ...widget.titleBuilders,
         _defaultTitledViewBuilder,
       ],
       inputBuilders: [
-        if (customBuilder != null) ...customBuilder.inputBuilders,
+        ...widget.inputBuilders,
         _defaultInputViewBuilder,
       ],
-      unsupportedBuilder: customBuilder?.unsupportedBuilder,
+      unsupportedBuilder: widget.unsupportedBuilder,
     );
     _itemScrollController = ItemScrollController();
 
@@ -143,12 +166,12 @@ class _MostKeyValueEditorState extends State<MostKeyValueEditor> {
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
-        final mostJsonSchema = widget.controller.mostPropertiesOrNull;
-        final List<EditorViewType> viewTypes = mostJsonSchema == null
+        final properties = widget.controller.propeties;
+        final List<EditorViewType> viewTypes = properties == null
             ? []
             : widget.editorViewTypeParser.parse(
-                mostJsonSchema,
-                widget.controller.jsonRw,
+                properties,
+                widget.controller.jsonAccessor,
               );
         _currentParsedViewTypes = viewTypes;
 
@@ -158,95 +181,91 @@ class _MostKeyValueEditorState extends State<MostKeyValueEditor> {
               padding: const EdgeInsets.all(8.0),
               child: SearchAnchor(
                 searchController: _searchController,
-                builder: (BuildContext context, SearchController controller) {
-                  return SearchBar(
-                    controller: controller,
-                    // TODO replace deprecated usage after migrated from 3.16.9
-                    // ignore: deprecated_member_use
-                    padding: const MaterialStatePropertyAll<EdgeInsets>(
-                      EdgeInsets.symmetric(horizontal: 16.0),
-                    ),
-                    onTap: () => controller.openView(),
-                    onChanged: (_) => controller.openView(),
-                    leading: const Icon(Icons.search),
-                    trailing: [
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.text = '';
-                        },
-                      ),
-                    ],
-                  );
-                },
-                suggestionsBuilder: (_, SearchController controller) {
-                  final viewTypes = _currentParsedViewTypes;
-                  if (viewTypes == null || viewTypes.isEmpty) return [];
-                  final allSuggestions =
-                      viewTypes.map((e) => e.property).toList();
-                  final queryLowerCase =
-                      _searchController.text.trim().toLowerCase();
-
-                  return [
-                    if (queryLowerCase.isNotEmpty) ...[
-                      ListTile(
-                        title: Text('Search for $queryLowerCase'),
-                        onTap: () {
-                          setState(() => controller.closeView(queryLowerCase));
-                        },
-                      )
-                    ],
-                    ...allSuggestions
-                        .where(
-                          (s) =>
-                              _hasSearchMatch(queryLowerCase, s.displayTitle),
-                        )
-                        .map(
-                          (s) => ListTile(
-                            title: Text(s.displayTitle),
-                            subtitle: Text(s.fullPath),
-                            onTap: () {
-                              setState(
-                                  () => controller.closeView(s.displayTitle));
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ];
-                },
+                builder: _searchBuilder,
+                suggestionsBuilder: _suggestionsBuilder,
               ),
             ),
             Expanded(
-              child: Form(
-                key: widget.controller.formKey,
-                autovalidateMode: AutovalidateMode.disabled,
-                onChanged: () => widget.controller.resetValidationError(),
-                child: mostJsonSchema != null
-                    ? ScrollablePositionedList.builder(
-                        itemScrollController: _itemScrollController,
-                        padding: const EdgeInsets.only(
-                          top: 8,
-                          bottom: 32,
-                          left: 8,
-                          right: 0,
-                        ),
-                        itemCount: viewTypes.length,
-                        itemBuilder: (context, index) => viewTypes[index].build(
-                          widget.controller.jsonRw,
-                          propertyBuilder,
-                        ),
-                      )
-                    : const Center(
-                        child: Text(
-                          'No schema',
-                        ),
+              child: properties != null
+                  ? ScrollablePositionedList.builder(
+                      itemScrollController: _itemScrollController,
+                      padding: const EdgeInsets.only(
+                        top: 8,
+                        bottom: 32,
+                        left: 8,
+                        right: 0,
                       ),
-              ),
+                      itemCount: viewTypes.length,
+                      itemBuilder: (context, index) =>
+                          widget.editorViewTypeBuilder(
+                        viewTypes[index],
+                        widget.controller.jsonAccessor,
+                        propertyBuilder,
+                        widget.controller.validationResult,
+                      ),
+                    )
+                  : const Center(
+                      child: Text(
+                        'No schema',
+                      ),
+                    ),
             ),
           ],
         );
       },
     );
+  }
+
+  Widget _searchBuilder(BuildContext context, SearchController controller) {
+    return SearchBar(
+      controller: controller,
+      padding: const WidgetStatePropertyAll<EdgeInsets>(
+        EdgeInsets.symmetric(horizontal: 16.0),
+      ),
+      onTap: () => controller.openView(),
+      onChanged: (_) => controller.openView(),
+      leading: const Icon(Icons.search),
+      trailing: [
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            _searchController.text = '';
+          },
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _suggestionsBuilder(_, SearchController controller) {
+    final viewTypes = _currentParsedViewTypes;
+    if (viewTypes == null || viewTypes.isEmpty) return [];
+    final allSuggestions = viewTypes.map((e) => e.property).toList();
+    final queryLowerCase = _searchController.text.trim().toLowerCase();
+
+    return [
+      if (queryLowerCase.isNotEmpty) ...[
+        ListTile(
+          title: Text('Search for $queryLowerCase'),
+          onTap: () {
+            setState(() => controller.closeView(queryLowerCase));
+          },
+        )
+      ],
+      ...allSuggestions
+          .where(
+            (s) => _hasSearchMatch(queryLowerCase, s.displayTitle),
+          )
+          .map(
+            (s) => ListTile(
+              title: Text(s.displayTitle),
+              subtitle: Text(s.fullPath),
+              onTap: () {
+                setState(() => controller.closeView(s.displayTitle));
+              },
+            ),
+          )
+          .toList(),
+    ];
   }
 }
 
@@ -259,23 +278,23 @@ Widget? _defaultInputViewBuilder(
   return switch (property) {
     BooleanMostProperty() => BooleanPropertyInput(
         property: property,
-        propertyRw: spec.propertyRw,
+        accessor: spec.accessor,
       ),
     StringMostProperty() => StringPropertyInput(
         property: property,
-        propertyRw: spec.propertyRw,
+        accessor: spec.accessor,
       ),
     EnumMostProperty() => EnumPropertyInput(
         property: property,
-        propertyRw: spec.propertyRw,
+        accessor: spec.accessor,
       ),
     NumberMostProperty() => NumberPropertyInput(
         property: property,
-        propertyRw: spec.propertyRw,
+        accessor: spec.accessor,
       ),
     ArrayMostProperty() => ArrayPropertyInput(
         property: property,
-        propertyRw: spec.propertyRw,
+        accessor: spec.accessor,
         propertyBuilder: propBuilder,
       ),
     _ => null,
@@ -286,6 +305,7 @@ Widget? _defaultTitledViewBuilder(
   BuildContext context,
   PropertyBuilder propBuilder,
   PropertyBuilderSpec<MostValueProperty> spec,
+  ValidationResult validationResult,
 ) {
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,8 +315,9 @@ Widget? _defaultTitledViewBuilder(
         width: 256,
         child: PropertyNameView(
           property: spec.property,
-          propertyRw: spec.propertyRw,
-          validationResult: spec.propertyRw.validationResult,
+          accessor: spec.accessor,
+          validationResult:
+              validationResult.forProperty(spec.property.fullPath),
         ),
       ),
       const SizedBox(width: 8),
@@ -305,7 +326,7 @@ Widget? _defaultTitledViewBuilder(
           alignment: Alignment.centerLeft,
           child: ValuePropertyView(
             property: spec.property,
-            jsonRw: spec.jsonRw,
+            jsonAccessor: spec.jsonAccessor,
             propertyBuilder: propBuilder,
           ),
         ),
