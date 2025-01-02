@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:most_schema_parser/most_schema_parser.dart';
 
+import '../controller/validator/models/validation_result.dart';
 import '../utils/color_ext.dart';
 
 /// Nesting indicator widget.

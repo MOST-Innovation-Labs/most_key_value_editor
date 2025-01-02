@@ -11,6 +11,21 @@ sealed class ValidationResult {
   const factory ValidationResult.validated(
     List<ValidationMessage> messages,
   ) = Validated._;
+
+  /// Extract validation result for a specific property.
+  ValidationResult forProperty(String path) {
+    switch (this) {
+      case NotValidated():
+        return this;
+
+      case Validated(:var validationMessages):
+        final propertyRelatedErrors = validationMessages
+            .whereType<PropertyValidationError>()
+            .where((e) => e.path.startsWith(path))
+            .toList();
+        return ValidationResult.validated(propertyRelatedErrors);
+    }
+  }
 }
 
 /// Validation result that indicates that validation had been NOT executed yet.

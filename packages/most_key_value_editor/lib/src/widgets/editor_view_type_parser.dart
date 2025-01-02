@@ -1,6 +1,6 @@
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../json_reader_writer.dart';
+import '../json_accessor.dart';
 import 'editor_view_type.dart';
 
 /// Parser for view types.
@@ -11,7 +11,7 @@ class EditorViewTypeParser {
   /// Parses [MostProperty] list to list of view types.
   List<EditorViewType> parse(
     List<MostProperty> properties,
-    JsonReaderWriter jsonRw,
+    JsonAccessor jsonAccessor,
   ) {
     final List<EditorViewType> viewTypes = [];
 
@@ -27,7 +27,7 @@ class EditorViewTypeParser {
               topLevel: topLevel,
             ));
             if (property.required ||
-                jsonRw.property(property.fullPath).value != null) {
+                jsonAccessor.property(property.fullPath).value != null) {
               traverseProperties(property.properties);
             }
           case MostValueProperty():

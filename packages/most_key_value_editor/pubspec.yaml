@@ -1,11 +1,11 @@
 name: most_key_value_editor
 description: Highly customizable JSON editor based on `package:most_schema_parser`.
-version: 0.0.2
+version: 1.0.0
 repository: https://github.com/MOST-Innovation-Labs/most_key_value_editor
 
 environment:
-  sdk: ">=3.2.0 <4.0.0"
-  flutter: ">=3.19.0 <4.0.0"
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0 <4.0.0"
 
 dependency_overrides:
   most_schema_parser:
@@ -14,6 +14,8 @@ dependency_overrides:
 dependencies:
   flutter:
     sdk: flutter
+  cupertino_icons: ^1.0.0
+
   most_schema_parser: ^0.0.2
 
   json_schema: ^5.1.3

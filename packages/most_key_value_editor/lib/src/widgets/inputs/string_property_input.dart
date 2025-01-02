@@ -1,52 +1,51 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:most_schema_parser/most_schema_parser.dart';
 
-import '../../json_reader_writer.dart';
-import '../form_fields/string_form_field.dart';
+import '../../json_accessor.dart';
+import '../fields/string_field.dart';
 
-Widget _iconBuilder(BuildContext context, RegExp? regExp, dynamic value) {
-  if (regExp == null) {
-    return const Icon(Icons.text_fields_rounded);
-  } else {
-    return const Icon(Icons.emoji_symbols_rounded);
-  }
-}
-
+/// Input for [StringMostProperty].
 class StringPropertyInput extends StatelessWidget {
-  final StringMostProperty property;
-  final JsonPropertyReaderWriter propertyRw;
-  final Widget Function(BuildContext, RegExp?, dynamic value) iconBuilder;
+  /// Default icon builder.
+  static Widget defaultIconBuilder(
+    BuildContext context,
+    RegExp? regExp,
+    dynamic value,
+  ) {
+    if (regExp == null) {
+      return value == null
+          ? const Icon(CupertinoIcons.textformat_abc_dottedunderline)
+          : const Icon(CupertinoIcons.textformat_abc);
+    } else {
+      return const Icon(CupertinoIcons.asterisk_circle);
+    }
+  }
 
+  final StringMostProperty _property;
+  final JsonPropertyAccessor _accessor;
+  final Widget Function(BuildContext, RegExp?, dynamic value) _iconBuilder;
+
+  /// Create [StringPropertyInput].
   const StringPropertyInput({
     super.key,
-    required this.property,
-    required this.propertyRw,
-    this.iconBuilder = _iconBuilder,
-  });
+    required StringMostProperty property,
+    required JsonPropertyAccessor accessor,
+    Widget Function(BuildContext, RegExp?, dynamic) iconBuilder =
+        defaultIconBuilder,
+  })  : _iconBuilder = iconBuilder,
+        _accessor = accessor,
+        _property = property;
 
   @override
   Widget build(BuildContext context) {
-    final dynamic value = propertyRw.value;
-    final regExp = property.pattern;
+    final dynamic value = _accessor.value;
+    final regExp = _property.pattern;
 
-    return StringFormField(
+    return StringField(
       initial: value is String ? value : null,
-      icon: iconBuilder(context, regExp, value),
-      validate: (value) {
-        if (property.required && (value?.isEmpty ?? true)) {
-          return 'Missing required string.';
-        }
-        if (value == null) {
-          return null;
-        }
-
-        if (regExp == null) return null;
-        if (regExp.hasMatch(value)) return null;
-
-        return 'Value "$value" is not matching "$regExp"';
-      },
+      icon: _iconBuilder(context, regExp, value),
       onChanged: (newValue) {
-        propertyRw.value = newValue;
+        _accessor.value = newValue;
       },
     );
   }

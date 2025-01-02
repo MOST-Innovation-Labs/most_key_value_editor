@@ -1,22 +1,22 @@
-import 'package:json_schema/json_schema.dart';
+import '../../most_key_value_editor_controller.dart';
+import '../editor_state_validator.dart';
+import '../models/validation_message.dart';
 
-import 'most_validator.dart';
-import 'models/validation_message.dart';
-
-class MostJsonSchemaValidator implements MostValidator {
-  final JsonSchema? jsonSchema;
-
-  const MostJsonSchemaValidator(this.jsonSchema);
+/// Validator for JSON schema.
+class JsonSchemaValidator implements EditorStateValidator {
+  /// Create [JsonSchemaValidator].
+  const JsonSchemaValidator();
 
   @override
-  List<ValidationMessage> validate(Map<String, dynamic> map) {
-    final jsonSchema = this.jsonSchema;
+  List<ValidationMessage> validate(EditorState state) {
+    final jsonSchema = state.jsonSchema;
     if (jsonSchema == null) {
       return [
         const ValidationMessage.error('Schema is not provided'),
       ];
     }
 
+    final map = state.jsonAccessor.read();
     final validationResult = jsonSchema.validate(map);
     final messages = <ValidationMessage>[];
 
