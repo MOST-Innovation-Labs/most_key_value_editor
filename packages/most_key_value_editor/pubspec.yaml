@@ -5,11 +5,11 @@ repository: https://github.com/MOST-Innovation-Labs/most_key_value_editor
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
-  flutter: ">=3.24.0 <4.0.0"
+  flutter: ">=3.24.0"
 
-dependency_overrides:
-  most_schema_parser:
-    path: ../most_schema_parser
+# dependency_overrides:
+#   most_schema_parser:
+#     path: ../most_schema_parser
 
 dependencies:
   flutter:
