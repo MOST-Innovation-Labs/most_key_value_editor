@@ -16,6 +16,7 @@ Map<String, dynamic> castToJsonMap(
   return source.cast<String, dynamic>();
 }
 
+/// Creates deep copy of the provided Map.
 extension DeepCopyMapExtension on Map<String, dynamic> {
   /// Creates deep copy of the provided Map.
   Map<String, dynamic> deepCopyMap() {

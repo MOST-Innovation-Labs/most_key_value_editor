@@ -1,10 +1,13 @@
 import '../properties/most_property.dart';
 import 'most_json_schema_property_parser.dart';
+import 'property_mappers.dart' as property_mappers;
 import 'property_spec.dart';
 
 /// Property mapper.
 ///
 /// Allows to map specific JSON Schema properties to [MostProperty].
+///
+/// See [property_mappers] for more info.
 abstract class PropertyMapper {
   /// Creates [PropertyMapper].
   const PropertyMapper();

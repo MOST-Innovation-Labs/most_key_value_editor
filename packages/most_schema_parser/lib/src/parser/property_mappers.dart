@@ -8,6 +8,7 @@ import 'property_spec.dart';
 
 /// Mapper for [MostObjectProperty].
 class ObjectPropertyMapper extends PropertyMapper {
+  /// Create [ObjectPropertyMapper].
   const ObjectPropertyMapper();
 
   @override
@@ -43,6 +44,7 @@ class ObjectPropertyMapper extends PropertyMapper {
 
 /// Mapper for [BooleanMostProperty].
 class BooleanPropertyMapper extends PropertyMapper {
+  /// Create [BooleanPropertyMapper].
   const BooleanPropertyMapper();
 
   @override
@@ -65,6 +67,7 @@ class BooleanPropertyMapper extends PropertyMapper {
 
 /// Mapper for [StringMostProperty].
 class StringPropertyMapper extends PropertyMapper {
+  /// Create [StringPropertyMapper].
   const StringPropertyMapper();
 
   @override
@@ -89,6 +92,7 @@ class StringPropertyMapper extends PropertyMapper {
 
 /// Mapper for [EnumMostProperty].
 class EnumPropertyMapper extends PropertyMapper {
+  /// Create [EnumPropertyMapper].
   const EnumPropertyMapper();
 
   @override
@@ -113,6 +117,7 @@ class EnumPropertyMapper extends PropertyMapper {
 
 /// Mapper for [NumberMostProperty].
 class NumberPropertyMapper extends PropertyMapper {
+  /// Create [NumberPropertyMapper].
   const NumberPropertyMapper();
 
   @override
@@ -137,6 +142,7 @@ class NumberPropertyMapper extends PropertyMapper {
 
 /// Mapper for [ArrayMostProperty].
 class ArrayPropertyMapper extends PropertyMapper {
+  /// Create [ArrayPropertyMapper].
   const ArrayPropertyMapper();
 
   @override
